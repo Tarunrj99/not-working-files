@@ -19,10 +19,10 @@ if "users" not in globals():
         "UXXXXXXXXXX": "member2-pa-token",
     }
 emoji_actions = {
-    "ok": {"action": "approve", "message": "{user_name} ne approve kr diya"},
-    "white_check_mark": {"action": "approve_and_merge", "message": "{user_name} ne approve and merge kr diya"},
-    "rocket": {"action": "approve_merge_delete", "message": "{user_name} approved, merged and branch deleted"},
-    "+1": {"action": "approve", "message": "{user_name} approved"}
+    "ok": {"action": "approve", "message": "approve kr diya"}, #{user_name}
+    "white_check_mark": {"action": "approve_and_merge", "message": "approved and merged"},
+    "rocket": {"action": "approve_merge_delete", "message": "approved, merged and branch deleted"},
+    "+1": {"action": "approve", "message": "approved"}
 }
 @app.event("message")
 def handle_message(event, say):
