@@ -3,46 +3,38 @@ from slack_bolt.adapter.flask import SlackRequestHandler
 import requests
 import re
 import json
-
 def get_secret(secret_id):
     from google.cloud import secretmanager
     client = secretmanager.SecretManagerServiceClient()
     name = f"projects/glossy-fastness-305315/secrets/{secret_id}/versions/latest"
     response = client.access_secret_version(request={"name": name})
     return response.payload.data.decode("UTF-8")
-
 slack_token = get_secret("tarun-bot-token")
 signing_secret = get_secret("tarun-signing-secret")
 app = App(signing_secret=signing_secret, token=slack_token)
 handler = SlackRequestHandler(app)
-
 if "users" not in globals():
     users = {
         "U050DRWLZLG": "tarun-pa-token",
         "UXXXXXXXXXX": "member2-pa-token",
     }
-
 emoji_actions = {
     "ok": {"action": "approve", "message": "{user_name} ne approve kr diya"},
     "white_check_mark": {"action": "approve_and_merge", "message": "{user_name} ne approve and merge kr diya"},
     "rocket": {"action": "approve_merge_delete", "message": "{user_name} approved, merged and branch deleted"},
     "+1": {"action": "approve", "message": "{user_name} approved"}
 }
-
 @app.event("message")
 def handle_message(event, say):
     pass 
-
 @app.event("reaction_added")
 def handle_reaction(event, say):
     user = event["user"]
     reaction = event["reaction"]
     message_ts = event["item"]["ts"]
     channel = event["item"]["channel"]
-    
     if user not in users or reaction not in emoji_actions:
         return
-
     bot_user_id = app.client.auth_test()["user_id"]
     try:
         response = app.client.conversations_replies(channel=channel, ts=message_ts, limit=10)
@@ -68,7 +60,6 @@ def handle_reaction(event, say):
                         return
     except Exception as e:
         print(f"Error: {str(e)}")
-
 def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
@@ -83,7 +74,6 @@ def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
             print(f"Error")
     except Exception as e:
         print(f"Error")
-
 def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
@@ -102,7 +92,6 @@ def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
             print(f"Error")
     except Exception as e:
         print(f"Error")
-
 def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
