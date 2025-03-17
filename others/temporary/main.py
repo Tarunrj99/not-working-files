@@ -22,8 +22,6 @@ if "users" not in globals():
         "U050DRWLZLG": "spa-token",
         "U07BC7QCEQM": "tpa-token"
     }
-    # U050DRWLZLG = it's tarun user
-    # U07BC7QCEQM = it's sameer user
 
 emoji_actions = {
     "ok": {"action": "approve", "message": "{user_name} approved the changes"},
@@ -34,7 +32,7 @@ emoji_actions = {
 
 @app.event("message")
 def handle_message(event, say):
-    pass  # No "Processing PR..." message
+    pass  
 
 @app.event("reaction_added")
 def handle_reaction(event, say):
@@ -56,8 +54,6 @@ def handle_reaction(event, say):
                     pr_match = re.search(r"https://github.com/[^ ]+/pull/[0-9]+", text)
                     pr_url = pr_match.group(0) if pr_match else None
                     if pr_url:
-                        # LOG: Comment/uncomment to toggle PR URL logging --------------------- Commented below line
-                        print(f"PR URL: {pr_url}")
                         github_pat = get_secret(users[user])
                         action_info = emoji_actions[reaction]
                         user_info = app.client.users_info(user=user)
@@ -72,8 +68,7 @@ def handle_reaction(event, say):
                             approve_merge_delete_pr(pr_url, github_pat, say, message, channel, message_ts)
                         return
     except Exception as e:
-        # LOG: Comment/uncomment to toggle error logging
-        print(f"Error: {str(e)}")
+        print(f"Error A: {str(e)}")
 
 def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
@@ -84,15 +79,12 @@ def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
     try:
         response = requests.post(url, headers=headers, json=data, timeout=10)
         if response.status_code == 200:
-            # LOG: Comment/uncomment to toggle status logging --------------------- Commented below line
-            print(f"Status: PR {pr_url} approved")
+            print(f"Status: A")
             say(channel=channel, thread_ts=thread_ts, text=message)
         else:
-            # LOG: Comment/uncomment to toggle error logging
-            print(f"Error: Failed to approve PR {pr_url}: {response.text}")
+            print(f"Error B: {response.text}")
     except Exception as e:
-        # LOG: Comment/uncomment to toggle error logging
-        print(f"Error: Approving PR {pr_url} failed: {str(e)}")
+        print(f"Error C: {str(e)}")
 
 def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
@@ -105,18 +97,14 @@ def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
             merge_url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}/merge"
             merge_response = requests.put(merge_url, headers=headers, timeout=10)
             if merge_response.status_code == 200:
-                # LOG: Comment/uncomment to toggle status logging --------------------- Commented below line
-                print(f"Status: PR {pr_url} approved and merged")
+                print(f"Status: B")
                 say(channel=channel, thread_ts=thread_ts, text=message)
             else:
-                # LOG: Comment/uncomment to toggle error logging
-                print(f"Error: Failed to merge PR {pr_url}: {merge_response.text}")
+                print(f"Error D: {merge_response.text}")
         else:
-            # LOG: Comment/uncomment to toggle error logging
-            print(f"Error: Failed to approve PR {pr_url}: {approve_response.text}")
+            print(f"Error E: {approve_response.text}")
     except Exception as e:
-        # LOG: Comment/uncomment to toggle error logging
-        print(f"Error: Approving/merging PR {pr_url} failed: {str(e)}")
+        print(f"Error F: {str(e)}")
 
 def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
@@ -135,18 +123,13 @@ def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts
                 delete_url = f"https://api.github.com/repos/{repo}/git/refs/heads/{branch_name}"
                 delete_response = requests.delete(delete_url, headers=headers, timeout=10)
                 if delete_response.status_code == 204:
-                    # LOG: Comment/uncomment to toggle status logging --------------------- Commented below line
-                    print(f"Status: PR {pr_url} approved, merged, and branch deleted")
+                    print(f"Status: C")
                     say(channel=channel, thread_ts=thread_ts, text=message)
                 else:
-                    # LOG: Comment/uncomment to toggle error logging
-                    print(f"Error: Failed to delete branch for PR {pr_url}: {delete_response.text}")
+                    print(f"Error G: {delete_response.text}")
             else:
-                # LOG: Comment/uncomment to toggle error logging
-                print(f"Error: Failed to merge PR {pr_url}: {merge_response.text}")
+                print(f"Error H: {merge_response.text}")
         else:
-            # LOG: Comment/uncomment to toggle error logging
-            print(f"Error: Failed to approve PR {pr_url}: {approve_response.text}")
+            print(f"Error I: {approve_response.text}")
     except Exception as e:
-        # LOG: Comment/uncomment to toggle error logging
-        print(f"Error: Approving/merging/deleting PR {pr_url} failed: {str(e)}")
+        print(f"Error J: {str(e)}")
