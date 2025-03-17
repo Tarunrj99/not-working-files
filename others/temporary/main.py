@@ -59,7 +59,7 @@ def handle_reaction(event, say):
                             approve_merge_delete_pr(pr_url, github_pat, say, message, channel, message_ts)
                         return
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error : {str(e)}")
 def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
@@ -71,9 +71,11 @@ def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
         if response.status_code == 200:
             say(channel=channel, thread_ts=thread_ts, text=message)
         else:
-            print(f"Error")
+            # print(f"Error")
+            print(f"Error: Failed to approve PR {pr_url}: {response.text}")
     except Exception as e:
-        print(f"Error")
+        # print(f"Error")
+        print(f"Error: Approving PR {pr_url} failed: {str(e)}")
 def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
@@ -85,13 +87,19 @@ def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
             merge_url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}/merge"
             merge_response = requests.put(merge_url, headers=headers, timeout=10)
             if merge_response.status_code == 200:
+                # print(f"Error")
+                print(f"Status: PR {pr_url} approved and merged")
                 say(channel=channel, thread_ts=thread_ts, text=message)
             else:
-                print(f"Error")
+                # print(f"Error")
+                print(f"Error: Failed to merge PR {pr_url}: {merge_response.text}")
         else:
-            print(f"Error")
+            # print(f"Error")
+            print(f"Error: Failed to approve PR {pr_url}: {approve_response.text}")
     except Exception as e:
-        print(f"Error")
+        # print(f"Error")
+        print(f"Error: Approving/merging PR {pr_url} failed: {str(e)}")
+
 def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
@@ -109,12 +117,18 @@ def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts
                 delete_url = f"https://api.github.com/repos/{repo}/git/refs/heads/{branch_name}"
                 delete_response = requests.delete(delete_url, headers=headers, timeout=10)
                 if delete_response.status_code == 204:
+                    # print(f"Error")
+                    print(f"Status: PR {pr_url} approved, merged, and branch deleted")
                     say(channel=channel, thread_ts=thread_ts, text=message)
                 else:
-                    print(f"Error")
+                    # print(f"Error")
+                    print(f"Error: Failed to delete branch for PR {pr_url}: {delete_response.text}")
             else:
-                print(f"Error")
+                # print(f"Error")
+                print(f"Error: Failed to merge PR {pr_url}: {merge_response.text}")
         else:
-            print(f"Error")
+            # print(f"Error")
+            print(f"Error: Failed to approve PR {pr_url}: {approve_response.text}")
     except Exception as e:
-        print(f"Error")
+        # print(f"Error")
+        print(f"Error: Approving/merging/deleting PR {pr_url} failed: {str(e)}")
