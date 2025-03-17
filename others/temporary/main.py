@@ -15,8 +15,8 @@ app = App(signing_secret=signing_secret, token=slack_token)
 handler = SlackRequestHandler(app)
 if "users" not in globals():
     users = {
-        "U050DRWLZLG": "tarun-pa-token",
-        "UXXXXXXXXXX": "member2-pa-token",
+        "U07BC7QCEQM": "tarun-pa-token",
+        "U050DRWLZLG": "sameer-pa-token",
     }
 emoji_actions = {
     "ok": {"action": "approve", "message": "approve kr diya"}, #{user_name}
