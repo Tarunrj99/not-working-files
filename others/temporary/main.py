@@ -60,7 +60,7 @@ def handle_reaction(event, say):
                             approve_merge_delete_pr(pr_url, github_pat, say, message, channel, message_ts)
                         return
     except Exception as e:
-        print(f"Error : {str(e)}")
+        print(f"Error 11: {str(e)")
 def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
@@ -70,11 +70,12 @@ def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
     try:
         response = requests.post(url, headers=headers, json=data, timeout=10)
         if response.status_code == 200:
+            print(f"Status 11: Invalid")
             say(channel=channel, thread_ts=thread_ts, text=message)
         else:
-            print(f"Error")
+            print(f"Error 12")
     except Exception as e:
-        print(f"Error")
+        print(f"Error 13")
 def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
@@ -86,14 +87,14 @@ def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
             merge_url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}/merge"
             merge_response = requests.put(merge_url, headers=headers, timeout=10)
             if merge_response.status_code == 200:
-                print(f"Error")
+                print(f"Status 12: Invalid")
                 say(channel=channel, thread_ts=thread_ts, text=message)
             else:
-                print(f"Error")
+                print(f"Error 14")
         else:
-            print(f"Error")
+            print(f"Error 15")
     except Exception as e:
-        print(f"Error")
+        print(f"Error 16")
 def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
@@ -111,13 +112,13 @@ def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts
                 delete_url = f"https://api.github.com/repos/{repo}/git/refs/heads/{branch_name}"
                 delete_response = requests.delete(delete_url, headers=headers, timeout=10)
                 if delete_response.status_code == 204:
-                    print(f"Error")
+                    print(f"Status 13: Invalid")
                     say(channel=channel, thread_ts=thread_ts, text=message)
                 else:
-                    print(f"Error")
+                    print(f"Error 17")
             else:
-                print(f"Error")
+                print(f"Error 18")
         else:
-            print(f"Error")
+            print(f"Error 19")
     except Exception as e:
-        print(f"Error")
+        print(f"Error 20")
