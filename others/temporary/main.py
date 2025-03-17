@@ -15,7 +15,6 @@ app = App(signing_secret=signing_secret, token=slack_token)
 handler = SlackRequestHandler(app)
 if "users" not in globals():
     users = {
-        "U050DRWLZLG": "tpa-token",
         "U050DRWLZLG": "spa-token",
         "U07BC7QCEQM": "tpa-token"
     }
