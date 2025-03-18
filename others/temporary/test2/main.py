@@ -11,8 +11,8 @@ def get_secret(secret_id):
     response = client.access_secret_version(request={"name": name})
     return response.payload.data.decode("UTF-8")
 
-slack_token = get_secret("tarun-bot-token")
-signing_secret = get_secret("tarun-signing-secret")
+slack_token = get_secret("tbot-token-2")
+signing_secret = get_secret("tsigning-secret-2")
 app = App(signing_secret=signing_secret, token=slack_token)
 handler = SlackRequestHandler(app)
 
