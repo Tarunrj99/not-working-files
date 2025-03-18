@@ -22,7 +22,7 @@ if "users" not in globals():
         "U07BC7QCEQM": "spa-token"
     }
 SLACK_NOTIFICATIONS = True
-SLACK_ERRORS = True
+SLACK_ERRORS = False
 LOGGING_ENABLED = False
 
 emoji_actions = {
