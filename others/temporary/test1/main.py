@@ -23,15 +23,15 @@ if "users" not in globals():
         "U07BC7QCEQM": "spa-token"
     }
 # Control toggles
-SLACK_NOTIFICATIONS = True  # Set to False to disable approval messages in Slack
-SLACK_ERRORS = True         # Set to False to disable error messages in Slack
-LOGGING_ENABLED = True      # Set to False to disable Cloud Function logs
+SLACK_NOTIFICATIONS = True
+SLACK_ERRORS = False
+LOGGING_ENABLED = False
 
 emoji_actions = {
-    "ok": {"action": "approve", "message": "{user_name} approved the changes"},
-    "white_check_mark": {"action": "approve_and_merge", "message": "{user_name} approved the changes and PR merged"},
-    "rocket": {"action": "approve_merge_delete", "message": "{user_name} approved the changes, PR merged, and branch deleted"},
-    "+1": {"action": "approve", "message": "{user_name} approved the changes"}
+    "ok": {"action": "approve", "message": "approved"},
+    "white_check_mark": {"action": "approve_and_merge", "message": "approved nd merged"},
+    "rocket": {"action": "approve_merge_delete", "message": "approved, merged nd deleted"},
+    "+1": {"action": "approve", "message": "approved"}
 }
 
 @app.event("message")
