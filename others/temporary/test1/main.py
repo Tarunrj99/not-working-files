@@ -21,7 +21,6 @@ if "users" not in globals():
     }
 SLACK_NOTIFICATIONS = True
 SLACK_ERRORS = True
-LOGGING_ENABLED = True
 emoji_actions = {
     "ok": {"action": "approve", "message": "approved"},
     "white_check_mark": {"action": "approve_and_merge", "message": "approved nd mrg"},
