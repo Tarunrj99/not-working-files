@@ -23,8 +23,8 @@ if "users" not in globals():
     }
 # Control toggles
 SLACK_NOTIFICATIONS = True
-SLACK_ERRORS = False
-LOGGING_ENABLED = False
+SLACK_ERRORS = True
+LOGGING_ENABLED = True
 
 emoji_actions = {
     "ok": {"action": "approve", "message": "approved"},
