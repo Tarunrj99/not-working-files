@@ -16,7 +16,6 @@ signing_secret = get_secret("tarun-signing-secret")
 app = App(signing_secret=signing_secret, token=slack_token)
 handler = SlackRequestHandler(app)
 
-# Default users (overridden by Cloud Function if defined)
 if "users" not in globals():
       users = {
         "U050DRWLZLG": "tpa-token",
@@ -29,14 +28,14 @@ LOGGING_ENABLED = False
 
 emoji_actions = {
     "ok": {"action": "approve", "message": "approved"},
-    "white_check_mark": {"action": "approve_and_merge", "message": "approved nd merged"},
-    "rocket": {"action": "approve_merge_delete", "message": "approved, merged nd deleted"},
+    "white_check_mark": {"action": "approve_and_merge", "message": "approved nd mrg"},
+    "rocket": {"action": "approve_merge_delete", "message": "approved mrg del"},
     "+1": {"action": "approve", "message": "approved"}
 }
 
 @app.event("message")
 def handle_message(event, say):
-    pass  # No "Processing PR..." message
+    pass  
 
 @app.event("reaction_added")
 def handle_reaction(event, say):
@@ -59,7 +58,7 @@ def handle_reaction(event, say):
                     pr_url = pr_match.group(0) if pr_match else None
                     if pr_url:
                         if LOGGING_ENABLED:
-                            print(f"PR URL: {pr_url}")
+                            print(f"URL a")
                         github_pat = get_secret(users[user])
                         action_info = emoji_actions[reaction]
                         user_info = app.client.users_info(user=user)
@@ -75,7 +74,7 @@ def handle_reaction(event, say):
                         break
                         # return
     except Exception as e:
-        error_msg = f"Error: {str(e)}"
+        error_msg = f"Error A: {str(e)}"
         if LOGGING_ENABLED:
             print(error_msg)
         if SLACK_ERRORS:
@@ -91,17 +90,17 @@ def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
         response = requests.post(url, headers=headers, json=data, timeout=10)
         if response.status_code == 200:
             if LOGGING_ENABLED:
-                print(f"Status: PR {pr_url} approved")
+                print(f"Status: A")
             if SLACK_NOTIFICATIONS:
                 say(channel=channel, thread_ts=thread_ts, text=message)
         else:
-            error_msg = f"Error: Failed to approve PR {pr_url}: {response.text}"
+            error_msg = f"Error B: {response.text}"
             if LOGGING_ENABLED:
                 print(error_msg)
             if SLACK_ERRORS:
                 say(channel=channel, thread_ts=thread_ts, text=error_msg)
     except Exception as e:
-        error_msg = f"Error: Approving PR {pr_url} failed: {str(e)}"
+        error_msg = f"Error C: {str(e)}"
         if LOGGING_ENABLED:
             print(error_msg)
         if SLACK_ERRORS:
@@ -119,23 +118,23 @@ def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
             merge_response = requests.put(merge_url, headers=headers, timeout=10)
             if merge_response.status_code == 200:
                 if LOGGING_ENABLED:
-                    print(f"Status: PR {pr_url} approved and merged")
+                    print(f"Status: B")
                 if SLACK_NOTIFICATIONS:
                     say(channel=channel, thread_ts=thread_ts, text=message)
             else:
-                error_msg = f"Error: Failed to merge PR {pr_url}: {merge_response.text}"
+                error_msg = f"Error D: {merge_response.text}"
                 if LOGGING_ENABLED:
                     print(error_msg)
                 if SLACK_ERRORS:
                     say(channel=channel, thread_ts=thread_ts, text=error_msg)
         else:
-            error_msg = f"Error: Failed to approve PR {pr_url}: {approve_response.text}"
+            error_msg = f"Error E: {approve_response.text}"
             if LOGGING_ENABLED:
                 print(error_msg)
             if SLACK_ERRORS:
                 say(channel=channel, thread_ts=thread_ts, text=error_msg)
     except Exception as e:
-        error_msg = f"Error: Approving/merging PR {pr_url} failed: {str(e)}"
+        error_msg = f"Error F: {str(e)}"
         if LOGGING_ENABLED:
             print(error_msg)
         if SLACK_ERRORS:
@@ -159,29 +158,29 @@ def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts
                 delete_response = requests.delete(delete_url, headers=headers, timeout=10)
                 if delete_response.status_code == 204:
                     if LOGGING_ENABLED:
-                        print(f"Status: PR {pr_url} approved, merged, and branch deleted")
+                        print(f"Status: C")
                     if SLACK_NOTIFICATIONS:
                         say(channel=channel, thread_ts=thread_ts, text=message)
                 else:
-                    error_msg = f"Error: Failed to delete branch for PR {pr_url}: {delete_response.text}"
+                    error_msg = f"Error G: {delete_response.text}"
                     if LOGGING_ENABLED:
                         print(error_msg)
                     if SLACK_ERRORS:
                         say(channel=channel, thread_ts=thread_ts, text=error_msg)
             else:
-                error_msg = f"Error: Failed to merge PR {pr_url}: {merge_response.text}"
+                error_msg = f"Error H: {merge_response.text}"
                 if LOGGING_ENABLED:
                     print(error_msg)
                 if SLACK_ERRORS:
                     say(channel=channel, thread_ts=thread_ts, text=error_msg)
         else:
-            error_msg = f"Error: Failed to approve PR {pr_url}: {approve_response.text}"
+            error_msg = f"Error I: {approve_response.text}"
             if LOGGING_ENABLED:
                 print(error_msg)
             if SLACK_ERRORS:
                 say(channel=channel, thread_ts=thread_ts, text=error_msg)
     except Exception as e:
-        error_msg = f"Error: Approving/merging/deleting PR {pr_url} failed: {str(e)}"
+        error_msg = f"Error J: {str(e)}"
         if LOGGING_ENABLED:
             print(error_msg)
         if SLACK_ERRORS:
