@@ -21,9 +21,9 @@ if "users" not in globals():
         "U050DRWLZLG": "tpa-token",
         "U07BC7QCEQM": "spa-token"
     }
-SLACK_NOTIFICATIONS = True
+SLACK_NOTIFICATIONS = False
 SLACK_ERRORS = False
-LOGGING_ENABLED = False
+LOGGING_ENABLED = True
 
 emoji_actions = {
     "ok": {"action": "approve", "message": "approved"},
