@@ -11,25 +11,23 @@ def get_secret(secret_id):
     response = client.access_secret_version(request={"name": name})
     return response.payload.data.decode("UTF-8")
 
-slack_token = get_secret("tbot-token-2")
-signing_secret = get_secret("tsigning-secret-2")
+slack_token = get_secret("tarun-bot-token")
+signing_secret = get_secret("tarun-signing-secret")
 app = App(signing_secret=signing_secret, token=slack_token)
 handler = SlackRequestHandler(app)
 
+# Default users (overridden by Cloud Function if defined)
 if "users" not in globals():
-      users = {
+    users = {
         "U050DRWLZLG": "spa-token",
         "U07BC7QCEQM": "tpa-token"
     }
-SLACK_NOTIFICATIONS = True
-SLACK_ERRORS = True
-LOGGING_ENABLED = False
 
 emoji_actions = {
-    "ok": {"action": "approve", "message": "approved"},
-    "white_check_mark": {"action": "approve_and_merge", "message": "approved nd mrg"},
-    "rocket": {"action": "approve_merge_delete", "message": "approved mrg del"},
-    "+1": {"action": "approve", "message": "approved"}
+    "ok": {"action": "approve", "message": "approved by {user_name}"},
+    "white_check_mark": {"action": "approve_and_merge", "message": "approved nd merged by {user_name}"},
+    "rocket": {"action": "approve_merge_delete", "message": "approved, mrg nd deleted by {user_name}"},
+    "+1": {"action": "approve", "message": "approved by {user_name}"}
 }
 
 @app.event("message")
@@ -56,8 +54,6 @@ def handle_reaction(event, say):
                     pr_match = re.search(r"https://github.com/[^ ]+/pull/[0-9]+", text)
                     pr_url = pr_match.group(0) if pr_match else None
                     if pr_url:
-                        if LOGGING_ENABLED:
-                            print(f"AAA")
                         github_pat = get_secret(users[user])
                         action_info = emoji_actions[reaction]
                         user_info = app.client.users_info(user=user)
@@ -70,14 +66,9 @@ def handle_reaction(event, say):
                             approve_and_merge_pr(pr_url, github_pat, say, message, channel, message_ts)
                         elif action == "approve_merge_delete":
                             approve_merge_delete_pr(pr_url, github_pat, say, message, channel, message_ts)
-                        break
-                        # return
+                        return
     except Exception as e:
-        error_msg = f"Error A: {str(e)}"
-        if LOGGING_ENABLED:
-            print(error_msg)
-        if SLACK_ERRORS:
-            say(channel=channel, thread_ts=message_ts, text=error_msg)
+        print(f"Error A: {str(e)}")
 
 def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
@@ -88,22 +79,12 @@ def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
     try:
         response = requests.post(url, headers=headers, json=data, timeout=10)
         if response.status_code == 200:
-            if LOGGING_ENABLED:
-                print(f"Status: A")
-            if SLACK_NOTIFICATIONS:
-                say(channel=channel, thread_ts=thread_ts, text=message)
+            print(f"Status: A")
+            say(channel=channel, thread_ts=thread_ts, text=message)
         else:
-            error_msg = f"Error B: {response.text}"
-            if LOGGING_ENABLED:
-                print(error_msg)
-            if SLACK_ERRORS:
-                say(channel=channel, thread_ts=thread_ts, text=error_msg)
+            print(f"Error B: {response.text}")
     except Exception as e:
-        error_msg = f"Error C: {str(e)}"
-        if LOGGING_ENABLED:
-            print(error_msg)
-        if SLACK_ERRORS:
-            say(channel=channel, thread_ts=thread_ts, text=error_msg)
+        print(f"Error C: {str(e)}")
 
 def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
@@ -116,28 +97,14 @@ def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
             merge_url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}/merge"
             merge_response = requests.put(merge_url, headers=headers, timeout=10)
             if merge_response.status_code == 200:
-                if LOGGING_ENABLED:
-                    print(f"Status: B")
-                if SLACK_NOTIFICATIONS:
-                    say(channel=channel, thread_ts=thread_ts, text=message)
+                print(f"Status: B")
+                say(channel=channel, thread_ts=thread_ts, text=message)
             else:
-                error_msg = f"Error D: {merge_response.text}"
-                if LOGGING_ENABLED:
-                    print(error_msg)
-                if SLACK_ERRORS:
-                    say(channel=channel, thread_ts=thread_ts, text=error_msg)
+                print(f"Error D: {merge_response.text}")
         else:
-            error_msg = f"Error E: {approve_response.text}"
-            if LOGGING_ENABLED:
-                print(error_msg)
-            if SLACK_ERRORS:
-                say(channel=channel, thread_ts=thread_ts, text=error_msg)
+            print(f"Error E: {approve_response.text}")
     except Exception as e:
-        error_msg = f"Error F: {str(e)}"
-        if LOGGING_ENABLED:
-            print(error_msg)
-        if SLACK_ERRORS:
-            say(channel=channel, thread_ts=thread_ts, text=error_msg)
+        print(f"Error F: {str(e)}")
 
 def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
@@ -156,31 +123,13 @@ def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts
                 delete_url = f"https://api.github.com/repos/{repo}/git/refs/heads/{branch_name}"
                 delete_response = requests.delete(delete_url, headers=headers, timeout=10)
                 if delete_response.status_code == 204:
-                    if LOGGING_ENABLED:
-                        print(f"Status: C")
-                    if SLACK_NOTIFICATIONS:
-                        say(channel=channel, thread_ts=thread_ts, text=message)
+                    print(f"Status: C")
+                    say(channel=channel, thread_ts=thread_ts, text=message)
                 else:
-                    error_msg = f"Error G: {delete_response.text}"
-                    if LOGGING_ENABLED:
-                        print(error_msg)
-                    if SLACK_ERRORS:
-                        say(channel=channel, thread_ts=thread_ts, text=error_msg)
+                    print(f"Error G: {delete_response.text}")
             else:
-                error_msg = f"Error H: {merge_response.text}"
-                if LOGGING_ENABLED:
-                    print(error_msg)
-                if SLACK_ERRORS:
-                    say(channel=channel, thread_ts=thread_ts, text=error_msg)
+                print(f"Error H: {merge_response.text}")
         else:
-            error_msg = f"Error I: {approve_response.text}"
-            if LOGGING_ENABLED:
-                print(error_msg)
-            if SLACK_ERRORS:
-                say(channel=channel, thread_ts=thread_ts, text=error_msg)
+            print(f"Error I: {approve_response.text}")
     except Exception as e:
-        error_msg = f"Error J: {str(e)}"
-        if LOGGING_ENABLED:
-            print(error_msg)
-        if SLACK_ERRORS:
-            say(channel=channel, thread_ts=thread_ts, text=error_msg)
+        print(f"Error J: {str(e)}")
