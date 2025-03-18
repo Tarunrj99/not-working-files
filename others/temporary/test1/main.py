@@ -24,7 +24,7 @@ if "users" not in globals():
     }
 # Control toggles
 SLACK_NOTIFICATIONS = True  # Set to False to disable approval messages in Slack
-SLACK_ERRORS = True         # Set to False to disable error messages in Slack
+SLACK_ERRORS = False         # Set to False to disable error messages in Slack
 LOGGING_ENABLED = True      # Set to False to disable Cloud Function logs
 
 emoji_actions = {
