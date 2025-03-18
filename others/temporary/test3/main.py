@@ -16,30 +16,26 @@ signing_secret = get_secret("tarun-signing-secret")
 app = App(signing_secret=signing_secret, token=slack_token)
 handler = SlackRequestHandler(app)
 
-# Default users (overridden by Cloud Function if defined)
 if "users" not in globals():
       users = {
         "U050DRWLZLG": "tpa-token",
         "U07BC7QCEQM": "spa-token"
     }
-    # U050DRWLZLG = it's tarun user
-    # U07BC7QCEQM = it's sameer user
 
-# Control toggles
-SLACK_NOTIFICATIONS = True  # Set to False to disable approval messages in Slack
-SLACK_ERRORS = True         # Set to False to disable error messages in Slack
-LOGGING_ENABLED = True      # Set to False to disable Cloud Function logs
+SLACK_NOTIFICATIONS = True
+SLACK_ERRORS = True
+LOGGING_ENABLED = True
 
 emoji_actions = {
-    "ok": {"action": "approve", "message": "{user_name} approved the changes"},
-    "white_check_mark": {"action": "approve_and_merge", "message": "{user_name} approved the changes and PR merged"},
-    "rocket": {"action": "approve_merge_delete", "message": "{user_name} approved the changes, PR merged, and branch deleted"},
-    "+1": {"action": "approve", "message": "{user_name} approved the changes"}
+    "ok": {"action": "approve", "message": "approved"},
+    "white_check_mark": {"action": "approve_and_merge", "message": "approved nd merged"},
+    "rocket": {"action": "approve_merge_delete", "message": "approved, merged, nd br deleted"},
+    "+1": {"action": "approve", "message": "approved"}
 }
 
 @app.event("message")
 def handle_message(event, say):
-    pass  # No "Processing PR..." message
+    pass  #
 
 @app.event("reaction_added")
 def handle_reaction(event, say):
