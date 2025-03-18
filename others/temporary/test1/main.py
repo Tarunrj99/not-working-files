@@ -10,34 +10,43 @@ def get_secret(secret_id):
     name = f"projects/glossy-fastness-305315/secrets/{secret_id}/versions/latest"
     response = client.access_secret_version(request={"name": name})
     return response.payload.data.decode("UTF-8")
+
 slack_token = get_secret("tarun-bot-token")
 signing_secret = get_secret("tarun-signing-secret")
 app = App(signing_secret=signing_secret, token=slack_token)
 handler = SlackRequestHandler(app)
+
 if "users" not in globals():
       users = {
         "U050DRWLZLG": "tpa-token",
         "U07BC7QCEQM": "spa-token"
     }
+# Control toggles
 SLACK_NOTIFICATIONS = True
 SLACK_ERRORS = True
+LOGGING_ENABLED = True
+
 emoji_actions = {
     "ok": {"action": "approve", "message": "approved"},
     "white_check_mark": {"action": "approve_and_merge", "message": "approved nd mrg"},
     "rocket": {"action": "approve_merge_delete", "message": "approved mrg del"},
     "+1": {"action": "approve", "message": "approved"}
 }
+
 @app.event("message")
 def handle_message(event, say):
     pass  
+
 @app.event("reaction_added")
 def handle_reaction(event, say):
     user = event["user"]
     reaction = event["reaction"]
     message_ts = event["item"]["ts"]
     channel = event["item"]["channel"]
+    
     if user not in users or reaction not in emoji_actions:
         return
+
     bot_user_id = app.client.auth_test()["user_id"]
     try:
         response = app.client.conversations_replies(channel=channel, ts=message_ts, limit=10)
@@ -49,7 +58,7 @@ def handle_reaction(event, say):
                     pr_url = pr_match.group(0) if pr_match else None
                     if pr_url:
                         if LOGGING_ENABLED:
-                            print(f"AAA")
+                            print(f"URL a")
                         github_pat = get_secret(users[user])
                         action_info = emoji_actions[reaction]
                         user_info = app.client.users_info(user=user)
@@ -63,12 +72,14 @@ def handle_reaction(event, say):
                         elif action == "approve_merge_delete":
                             approve_merge_delete_pr(pr_url, github_pat, say, message, channel, message_ts)
                         break
+                        # return
     except Exception as e:
         error_msg = f"Error A: {str(e)}"
         if LOGGING_ENABLED:
             print(error_msg)
         if SLACK_ERRORS:
             say(channel=channel, thread_ts=message_ts, text=error_msg)
+
 def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
@@ -94,6 +105,7 @@ def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
             print(error_msg)
         if SLACK_ERRORS:
             say(channel=channel, thread_ts=thread_ts, text=error_msg)
+
 def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
@@ -127,6 +139,7 @@ def approve_and_merge_pr(pr_url, github_pat, say, message, channel, thread_ts):
             print(error_msg)
         if SLACK_ERRORS:
             say(channel=channel, thread_ts=thread_ts, text=error_msg)
+
 def approve_merge_delete_pr(pr_url, github_pat, say, message, channel, thread_ts):
     pr_number = pr_url.split("/")[-1]
     repo = "/".join(pr_url.split("/")[3:5])
