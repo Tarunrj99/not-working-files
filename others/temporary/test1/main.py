@@ -23,7 +23,7 @@ if "users" not in globals():
         "U07BC7QCEQM": "spa-token"
     }
 # Control toggles
-SLACK_NOTIFICATIONS = False  # Set to False to disable approval messages in Slack
+SLACK_NOTIFICATIONS = True  # Set to False to disable approval messages in Slack
 SLACK_ERRORS = True         # Set to False to disable error messages in Slack
 LOGGING_ENABLED = True      # Set to False to disable Cloud Function logs
 
@@ -91,8 +91,6 @@ def approve_pr(pr_url, github_pat, say, message, channel, thread_ts):
         if response.status_code == 200:
             if LOGGING_ENABLED:
                 print(f"Status: PR {pr_url} approved")
-            if SLACK_NOTIFICATIONS:
-                say(channel=channel, thread_ts=thread_ts, text=message)
         else:
             error_msg = f"Error: Failed to approve PR {pr_url}: {response.text}"
             if LOGGING_ENABLED:
