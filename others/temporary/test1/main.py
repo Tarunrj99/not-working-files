@@ -18,10 +18,9 @@ handler = SlackRequestHandler(app)
 
 if "users" not in globals():
       users = {
-        "U050DRWLZLG": "tpa-token",
-        "U07BC7QCEQM": "spa-token"
+        "U050DRWLZLG": "spa-token",
+        "U07BC7QCEQM": "tpa-token"
     }
-# Control toggles
 SLACK_NOTIFICATIONS = True
 SLACK_ERRORS = True
 LOGGING_ENABLED = False
