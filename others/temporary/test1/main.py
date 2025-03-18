@@ -72,7 +72,8 @@ def handle_reaction(event, say):
                             approve_and_merge_pr(pr_url, github_pat, say, message, channel, message_ts)
                         elif action == "approve_merge_delete":
                             approve_merge_delete_pr(pr_url, github_pat, say, message, channel, message_ts)
-                        return
+                        break
+                        # return
     except Exception as e:
         error_msg = f"Error: {str(e)}"
         if LOGGING_ENABLED:
