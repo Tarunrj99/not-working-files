@@ -58,7 +58,7 @@ def handle_reaction(event, say):
                     pr_url = pr_match.group(0) if pr_match else None
                     if pr_url:
                         if LOGGING_ENABLED:
-                            print(f"URL a")
+                            print(f"AAA")
                         github_pat = get_secret(users[user])
                         action_info = emoji_actions[reaction]
                         user_info = app.client.users_info(user=user)
