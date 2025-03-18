@@ -66,12 +66,12 @@ def handle_reaction(event, say):
                         user_name = user_info["user"]["real_name"] if user_info["ok"] else user
                         action = action_info["action"]
                         message = action_info["message"].format(user_name=user_name)
-                        # if action == "approve":
-                        #     approve_pr(pr_url, github_pat, say, message, channel, message_ts)
-                        # elif action == "approve_and_merge":
-                        #     approve_and_merge_pr(pr_url, github_pat, say, message, channel, message_ts)
-                        # elif action == "approve_merge_delete":
-                        #     approve_merge_delete_pr(pr_url, github_pat, say, message, channel, message_ts)
+                        if action == "approve":
+                            approve_pr(pr_url, github_pat, say, message, channel, message_ts)
+                        elif action == "approve_and_merge":
+                            approve_and_merge_pr(pr_url, github_pat, say, message, channel, message_ts)
+                        elif action == "approve_merge_delete":
+                            approve_merge_delete_pr(pr_url, github_pat, say, message, channel, message_ts)
                         return
     except Exception as e:
         error_msg = f"Error: {str(e)}"
