@@ -16,7 +16,6 @@ signing_secret = get_secret("tarun-signing-secret")
 app = App(signing_secret=signing_secret, token=slack_token)
 handler = SlackRequestHandler(app)
 
-# Default users (overridden by Cloud Function if defined)
 if "users" not in globals():
     users = {
         "U050DRWLZLG": "spa-token",
