@@ -24,10 +24,10 @@ if "users" not in globals():
     }
 
 emoji_actions = {
-    "ok": {"action": "approve", "message": "approved by {user_name}"},
-    "white_check_mark": {"action": "approve_and_merge", "message": "approved nd merged by {user_name}"},
-    "rocket": {"action": "approve_merge_delete", "message": "approved, mrg nd deleted by {user_name}"},
-    "+1": {"action": "approve", "message": "approved by {user_name}"}
+    "ok": {"action": "approve", "message": "approved"},
+    "white_check_mark": {"action": "approve_and_merge", "message": "approved nd merged"},
+    "rocket": {"action": "approve_merge_delete", "message": "approved, mrg nd deleted"},
+    "+1": {"action": "approve", "message": "approved"}
 }
 
 @app.event("message")
