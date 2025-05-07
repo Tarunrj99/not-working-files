@@ -2,19 +2,27 @@ let DEBUG_LOG = true; // Default to true — will be overridden by config
 
 function getConfiguration() {
   const CONFIG_URL = "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/System/config/config.json";
-  const USE_LOCAL_CONFIG = false; // Set to true to override remote config
+  const USE_LOCAL_CONFIG = true; // Set to true to override remote config
 
   const localConfig = {
     SHEET_NAME_CELL: "Emails",
-    TEST_MODE: false, // Set to false for real-time use
-    DAILY_LIMIT: 25, // Max emails per day
-    HOURLY_LIMIT: 3, // Max emails based on per hour run
-    EMAIL_GAP_MS: 60 * 1000, // 1 minute gape in milliseconds
-    ALLOWED_DAYS: [1, 2, 3, 4], // Mon–Thu
-    ALLOWED_TIME_START: "18:00", // Correct key name
-    ALLOWED_TIME_END: "20:00",   // Correct key name
+    TEST_MODE: false,
+    DAILY_LIMIT: 2,
+    HOURLY_LIMIT: 5,
+    EMAIL_GAP_MS: 60 * 1000,
+    ALLOWED_DAYS: [1, 2, 3, 4],
+    ALLOWED_TIME_START: "00:00",
+    ALLOWED_TIME_END: "12:00",
     DEBUG_LOG: true
   };
+
+  // Convert number-based time inputs to strings
+  if (typeof localConfig.ALLOWED_TIME_START === "number") {
+    localConfig.ALLOWED_TIME_START = `${Math.floor(localConfig.ALLOWED_TIME_START)}:00`;
+  }
+  if (typeof localConfig.ALLOWED_TIME_END === "number") {
+    localConfig.ALLOWED_TIME_END = `${Math.floor(localConfig.ALLOWED_TIME_END)}:00`;
+  }
 
   if (USE_LOCAL_CONFIG) {
     log("Using local configuration.");
@@ -26,7 +34,14 @@ function getConfiguration() {
     const statusCode = response.getResponseCode();
     if (statusCode === 200) {
       log("Configuration fetched successfully.");
-      return JSON.parse(response.getContentText());
+      let config = JSON.parse(response.getContentText());
+      if (typeof config.ALLOWED_TIME_START === "number") {
+        config.ALLOWED_TIME_START = `${Math.floor(config.ALLOWED_TIME_START)}:00`;
+      }
+      if (typeof config.ALLOWED_TIME_END === "number") {
+        config.ALLOWED_TIME_END = `${Math.floor(config.ALLOWED_TIME_END)}:00`;
+      }
+      return config;
     } else {
       log(`Failed to fetch configuration. HTTP Status: ${statusCode}`);
       return localConfig;
@@ -75,178 +90,215 @@ function getMainScript() {
   }
 }
 
+function isWithinAllowedTime(now, startStr, endStr) {
+  if (!startStr || !endStr) {
+    log("⚠️ Time window not defined properly. Skipping time check.");
+    return true;
+  }
+
+  const [startHour, startMin = 0] = startStr.split(":").map(Number);
+  const [endHour, endMin = 0] = endStr.split(":").map(Number);
+
+  if (startHour < 0 || startHour > 23 || startMin < 0 || startMin > 59 ||
+      endHour < 0 || endHour > 23 || endMin < 0 || endMin > 59) {
+    log(`❌ Invalid time format: ${startStr}–${endStr}. Skipping time check.`);
+    return true;
+  }
+
+  const startTime = new Date(now);
+  startTime.setHours(startHour, startMin, 0, 0);
+
+  const endTime = new Date(now);
+  endTime.setHours(endHour, endMin, 59, 999); // Inclusive end time
+
+  return now >= startTime && now <= endTime;
+}
+
+function parseSentAt(sentAt) {
+  if (!sentAt) return null;
+
+  // Try parsing as dd/MM/yyyy HH:mm:ss
+  try {
+    const parsed = Utilities.parseDate(sentAt, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
+    if (!isNaN(parsed.getTime())) return parsed;
+  } catch (e) {
+    log(`⚠️ Failed to parse Sent At as dd/MM/yyyy HH:mm:ss: ${sentAt}`);
+  }
+
+  // Try parsing as Date object or other string formats
+  try {
+    const parsed = new Date(sentAt);
+    if (!isNaN(parsed.getTime())) return parsed;
+  } catch (e) {
+    log(`⚠️ Failed to parse Sent At as Date: ${sentAt}`);
+  }
+
+  log(`❌ Invalid Sent At timestamp: ${sentAt}`);
+  return null;
+}
+
 function sendExploreEmails() {
   log("⏳ Starting sendExploreEmails...");
 
-  // Hardcoded template URLs
-  const final_templates = {
-    "template-1": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/tarun-explore-devops-role-template.html",
-    "template-2": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/tarun-sharing-cv-for-devops-role-template.html",
-    "template-3": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/tarun-sharing-cv-for-senior-devops-role-template.html",
-    "template-4": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/tarun-sharing-cv-for-cloud-role-template.html",
-    "template-5": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/tarun-sharing-cv-for-senior-devops-role-template.html"
-  };
-
-  let config;
+  const lock = LockService.getScriptLock();
   try {
-    config = getConfiguration();
-    DEBUG_LOG = config.DEBUG_LOG ?? true;
-    log("✅ Configuration fetched successfully.");
-    log("🔍 Config content: " + JSON.stringify(config));
-  } catch (e) {
-    Logger.log("❌ Failed to load config: " + e);
-    return;
-  }
-
-  const {
-    SHEET_NAME_CELL,
-    TEST_MODE,
-    DAILY_LIMIT,
-    HOURLY_LIMIT,
-    EMAIL_GAP_MS,
-    ALLOWED_DAYS,
-    ALLOWED_TIME_START,
-    ALLOWED_TIME_END
-  } = config;
-
-  const SHEET_NAME = SHEET_NAME_CELL;
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-  if (!sheet) {
-    log("❌ Sheet not found: " + SHEET_NAME);
-    return;
-  }
-
-  log("✅ Sheet loaded. Proceeding with data.");
-  const data = sheet.getDataRange().getValues();
-  const now = new Date();
-  const currentDay = now.getDay();
-  const currentHour = now.getHours();
-
-//  if (!TEST_MODE && (currentHour < ALLOWED_TIME_START || currentHour > ALLOWED_TIME_END)) {
-//    log(`⛔ Exiting: Current hour (${currentHour}) is outside allowed range.`);
-//    return;
-//  }
-
-  function isWithinAllowedTime(now, startStr, endStr) {
-    if (!startStr || !endStr) {
-      log("⚠️ Time window not defined properly. Skipping time check.");
-      return true;
+    if (!lock.tryLock(10000)) {
+      log("❌ Could not acquire lock. Another execution may be running.");
+      return;
     }
 
-    const [startHour, startMin = 0] = startStr.split(":").map(Number);
-    const [endHour, endMin = 0] = endStr.split(":").map(Number);
+    const final_templates = {
+      "template-1": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/tarun-explore-devops-role-template.html",
+      "template-2": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/tarun-sharing-cv-for-devops-role-template.html",
+      "template-3": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/tarun-sharing-cv-for-senior-devops-role-template.html",
+      "template-4": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/tarun-sharing-cv-for-cloud-role-template.html",
+      "template-5": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/tarun-sharing-cv-for-senior-devops-role-template.html"
+    };
 
-    const startTime = new Date(now);
-    startTime.setHours(startHour, startMin, 0, 0);
-
-    const endTime = new Date(now);
-    endTime.setHours(endHour, endMin, 0, 0);
-
-    return now >= startTime && now < endTime;
-  }
-
-  if (!TEST_MODE && !isWithinAllowedTime(now, config.ALLOWED_TIME_START, config.ALLOWED_TIME_END)) {
-    log(`⛔ Exiting: Current time (${now}) is outside allowed range.`);
-    return;
-  }
-
-
-
-  if (!TEST_MODE && !ALLOWED_DAYS.includes(currentDay)) {
-    log(`⛔ Exiting: Today (day ${currentDay}) is not an allowed day.`);
-    return;
-  }
-
-  let sentThisRun = 0;
-  let dailyCount = 0;
-  let hourlyCount = 0;
-
-  // Count already sent emails
-  for (let i = 1; i < data.length; i++) {
-    const sentAt = data[i][6];
-    if (sentAt) {
-      const sentDate = new Date(sentAt);
-      if (!isNaN(sentDate.getTime())) {
-        if (isSameDay(sentDate, now)) dailyCount++;
-        if (isSameHour(sentDate, now)) hourlyCount++;
-      }
-    }
-  }
-
-  log(`📈 Sent today: ${dailyCount}, this hour: ${hourlyCount}`);
-
-  for (let i = 1; i < data.length; i++) {
-    if (sentThisRun >= HOURLY_LIMIT || dailyCount >= DAILY_LIMIT || hourlyCount >= HOURLY_LIMIT) {
-      log("🚫 Limit reached. Stopping.");
-      break;
-    }
-
-    //if (sentThisRun >= HOURLY_LIMIT || dailyCount >= DAILY_LIMIT || hourlyCount >= HOURLY_LIMIT) {
-    //  log("🚫 Limit reached. Stopping.");
-    //  break;
-    //}
-
-    const email = data[i][1];
-    const cc = data[i][2];
-    const templateKey = data[i][3];
-    const ready = data[i][4];
-    const status = data[i][5];
-
-    log(`🔁 Row ${i + 1} | Email: ${email} | Template: ${templateKey} | Ready: ${ready} | Status: ${status}`);
-
-    if (status === "Sent" || !email || !(ready === true || ready === "TRUE")) {
-      log(`⚠️ Skipping row ${i + 1}`);
-      continue;
-    }
-
-    if (!final_templates.hasOwnProperty(templateKey)) {
-      log(`⚠️ Invalid template key in row ${i + 1}: ${templateKey}`);
-      continue;
-    }
-
-    let htmlBody;
+    let config;
     try {
-      const response = UrlFetchApp.fetch(final_templates[templateKey]);
-      if (response.getResponseCode() !== 200) throw new Error("Template fetch failed");
-      htmlBody = response.getContentText();
+      config = getConfiguration();
+      DEBUG_LOG = config.DEBUG_LOG ?? true;
+      log("✅ Configuration fetched successfully.");
+      log("🔍 Config content: " + JSON.stringify(config));
     } catch (e) {
-      log(`❌ Failed to load template ${templateKey} for row ${i + 1}: ${e}`);
-      continue;
+      log("❌ Failed to load config: " + e);
+      return;
     }
 
-    const subject = extractSubjectFromTemplate(htmlBody);
-    const plainBody = "Hello, I am exploring opportunities in DevOps/Cloud. Please view the HTML version if available.";
+    const {
+      SHEET_NAME_CELL,
+      TEST_MODE,
+      DAILY_LIMIT,
+      HOURLY_LIMIT,
+      EMAIL_GAP_MS,
+      ALLOWED_DAYS,
+      ALLOWED_TIME_START,
+      ALLOWED_TIME_END
+    } = config;
 
-    try {
-      const mailOptions = {
-        htmlBody: htmlBody
-      };
-      if (cc && cc.toString().trim() !== "") {
-        mailOptions.cc = cc;
-      }
-
-      GmailApp.sendEmail(email, subject, plainBody, mailOptions);
-
-      const timeStamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
-      sheet.getRange(i + 1, 6).setValue("Sent");
-      sheet.getRange(i + 1, 7).setValue(timeStamp);
-
-      log(`✅ Email sent to ${email} with ${templateKey} at ${timeStamp}`);
-
-      sentThisRun++;
-      dailyCount++;
-      hourlyCount++;
-
-      if (sentThisRun < HOURLY_LIMIT && i < data.length - 1) {
-        log("⏱ Sleeping before next email...");
-        Utilities.sleep(EMAIL_GAP_MS);
-      }
-    } catch (e) {
-      log(`❌ Failed sending to ${email}: ${e}`);
+    const SHEET_NAME = SHEET_NAME_CELL;
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      log("❌ Sheet not found: " + SHEET_NAME);
+      return;
     }
+
+    log("✅ Sheet loaded. Proceeding with data.");
+    const data = sheet.getDataRange().getValues();
+    const now = new Date();
+    const currentDay = now.getDay();
+
+    if (!TEST_MODE && !ALLOWED_DAYS.includes(currentDay)) {
+      log(`⛔ Exiting: Today (day ${currentDay}) is not an allowed day.`);
+      return;
+    }
+
+    if (!TEST_MODE && !isWithinAllowedTime(now, ALLOWED_TIME_START, ALLOWED_TIME_END)) {
+      log(`⛔ Exiting: Current time (${Utilities.formatDate(now, Session.getScriptTimeZone(), "HH:mm:ss")}) is outside allowed range (${ALLOWED_TIME_START}–${ALLOWED_TIME_END}).`);
+      return;
+    }
+
+    let sentThisRun = 0;
+    let dailyCount = 0;
+    let hourlyCount = 0;
+
+    // Count already sent emails
+    for (let i = 1; i < data.length; i++) {
+      const sentAt = data[i][6];
+      log(`🔍 Raw Sent At in row ${i + 1}: ${sentAt}`);
+      const sentDate = parseSentAt(sentAt);
+      if (sentDate && !isNaN(sentDate.getTime())) {
+        if (isSameDay(sentDate, now)) {
+          dailyCount++;
+          log(`📅 Row ${i + 1} counted in dailyCount: Sent At ${sentAt}`);
+        }
+        if (isSameHour(sentDate, now)) {
+          hourlyCount++;
+          log(`🕒 Row ${i + 1} counted in hourlyCount: Sent At ${sentAt}`);
+        }
+      }
+    }
+
+    log(`📈 Sent today: ${dailyCount}/${DAILY_LIMIT}, this hour: ${hourlyCount}/${HOURLY_LIMIT}`);
+
+    // Set number format for Sent At column (G) to ensure consistency
+    sheet.getRange("G2:G" + sheet.getLastRow()).setNumberFormat("dd/mm/yyyy hh:mm:ss");
+
+    for (let i = 1; i < data.length; i++) {
+      if (sentThisRun >= HOURLY_LIMIT || dailyCount >= DAILY_LIMIT || hourlyCount >= HOURLY_LIMIT) {
+        log(`🚫 Limit reached: sentThisRun=${sentThisRun}/${HOURLY_LIMIT}, dailyCount=${dailyCount}/${DAILY_LIMIT}, hourlyCount=${hourlyCount}/${HOURLY_LIMIT}`);
+        break;
+      }
+
+      const email = data[i][1];
+      const cc = data[i][2];
+      const templateKey = data[i][3];
+      const ready = data[i][4];
+      const status = data[i][5];
+
+      log(`🔁 Row ${i + 1} | Email: ${email} | Template: ${templateKey} | Ready: ${ready} | Status: ${status}`);
+
+      if (status === "Sent" || !email || !(ready === true || ready === "TRUE")) {
+        log(`⚠️ Skipping row ${i + 1}`);
+        continue;
+      }
+
+      if (!final_templates.hasOwnProperty(templateKey)) {
+        log(`⚠️ Invalid template key in row ${i + 1}: ${templateKey}`);
+        continue;
+      }
+
+      let htmlBody;
+      try {
+        const response = UrlFetchApp.fetch(final_templates[templateKey], { muteHttpExceptions: true });
+        if (response.getResponseCode() !== 200) throw new Error(`Template fetch failed: HTTP ${response.getResponseCode()}`);
+        htmlBody = response.getContentText();
+      } catch (e) {
+        log(`❌ Failed to load template ${templateKey} for row ${i + 1}: ${e}`);
+        continue;
+      }
+
+      const subject = extractSubjectFromTemplate(htmlBody);
+      const plainBody = "Hello, I am exploring opportunities in DevOps/Cloud. Please view the HTML version if available.";
+
+      try {
+        const mailOptions = {
+          htmlBody: htmlBody
+        };
+        if (cc && cc.toString().trim() !== "") {
+          mailOptions.cc = cc;
+        }
+
+        GmailApp.sendEmail(email, subject, plainBody, mailOptions);
+
+        const timeStamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
+        sheet.getRange(i + 1, 6).setValue("Sent");
+        sheet.getRange(i + 1, 7).setValue(timeStamp);
+        SpreadsheetApp.flush(); // Ensure sheet updates are saved immediately
+
+        log(`✅ Email sent to ${email} with ${templateKey} at ${timeStamp}`);
+        log(`📊 Pre-update counts: sentThisRun=${sentThisRun}/${HOURLY_LIMIT}, dailyCount=${dailyCount}/${DAILY_LIMIT}, hourlyCount=${hourlyCount}/${HOURLY_LIMIT}`);
+
+        sentThisRun++;
+        dailyCount++;
+        hourlyCount++;
+
+        log(`📊 Updated counts: sentThisRun=${sentThisRun}/${HOURLY_LIMIT}, dailyCount=${dailyCount}/${DAILY_LIMIT}, hourlyCount=${hourlyCount}/${HOURLY_LIMIT}`);
+
+        if (sentThisRun < HOURLY_LIMIT && i < data.length - 1 && dailyCount < DAILY_LIMIT && hourlyCount < HOURLY_LIMIT) {
+          log("⏱ Sleeping before next email...");
+          Utilities.sleep(EMAIL_GAP_MS);
+        }
+      } catch (e) {
+        log(`❌ Failed sending to ${email}: ${e}`);
+      }
+    }
+
+    log(`✅ Finished. Emails sent this run: ${sentThisRun}`);
+  } finally {
+    lock.releaseLock();
   }
-
-  log(`✅ Finished. Emails sent this run: ${sentThisRun}`);
 }
 
 function isSameDay(date1, date2) {
@@ -268,7 +320,6 @@ function log(message) {
   if (DEBUG_LOG) Logger.log(message);
 }
 
-// This function is only run ONCE manually to create the trigger
 function createTrigger() {
   const triggers = ScriptApp.getProjectTriggers();
   const exists = triggers.some(t => t.getHandlerFunction() === "sendExploreEmails");
@@ -283,4 +334,3 @@ function createTrigger() {
     Logger.log("⚠️ Trigger already exists. No new trigger created.");
   }
 }
-
