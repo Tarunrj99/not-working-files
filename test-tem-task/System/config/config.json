@@ -4,8 +4,8 @@
   "DAILY_LIMIT": 2,
   "HOURLY_LIMIT": 1,
   "EMAIL_GAP_MS": 60000,
-  "ALLOWED_DAYS": [1, 2, 3, 4],
+  "ALLOWED_DAYS": [1, 2, 3],
   "ALLOWED_TIME_START": "07:00",
-  "ALLOWED_TIME_END": "09:00",
+  "ALLOWED_TIME_END": "12:00",
   "DEBUG_LOG": true
 }
