@@ -4,6 +4,10 @@ function getConfiguration() {
   const CONFIG_URL = "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/others/ss1/customConfig.json";
   const USE_LOCAL_CONFIG = false; // Set to true to override remote config
 
+  const localConfig = {
+    SHEET_NAME_CELL: "Emails"
+  };
+
   if (USE_LOCAL_CONFIG) {
     log("Using local configuration.");
     return localConfig;
