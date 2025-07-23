@@ -1,7 +1,7 @@
 let DEBUG_LOG = true; // Default to true — will be overridden by config
 
 function getConfiguration() {
-  const CONFIG_URL = "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/others/ss1/customConfig.json";
+  const CONFIG_URL = "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/others/sk/customConfig.json";
   const USE_LOCAL_CONFIG = false; // Set to true to override remote config
 
   const localConfig = {
@@ -72,8 +72,8 @@ function sendExploreEmails() {
 
   // Hardcoded template URLs
   const final_templates = {
-    "template-1": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/others/ss1/exploreF.html",
-    "template-2": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/others/ss1/cvshare.html"
+    "template-1": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/others/sk/exploreCV.html",
+    "template-2": "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/others/sk/shareCV.html"
   };
 
   let config;
