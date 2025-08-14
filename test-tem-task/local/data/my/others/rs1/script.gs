@@ -1,13 +1,11 @@
 let DEBUG_LOG = true; // Default to true — will be overridden by config
 
 function getConfiguration() {
-  const CONFIG_URL = "https://raw.githubusercontent.com/Tarunrj99/Automated-Email-Sending-System/refs/heads/main/config/customConfig.json";
+  const CONFIG_URL = "https://raw.githubusercontent.com/Tarunrj99/not-working-files/refs/heads/main/test-tem-task/local/data/my/others/rs1/customConfig.json";
   const USE_LOCAL_CONFIG = false; // Set to true to override remote config
 
   const localConfig = {
-    SHEET_NAME_CELL: "Emails",
-    TEST_MODE: false, // Set to false for real-time use
-    DEBUG_LOG: true
+    SHEET_NAME_CELL: "Emails"
   };
 
   if (USE_LOCAL_CONFIG) {
