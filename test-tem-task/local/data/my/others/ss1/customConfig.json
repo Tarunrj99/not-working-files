@@ -1,5 +1,5 @@
 {
-  "SHEET_NAME_CELL": "Emails",
+  "SHEET_NAME_CELL": "emails",
   "TEST_MODE": false,
   "DAILY_LIMIT": 25,
   "HOURLY_LIMIT": 5,
