@@ -1,11 +1,11 @@
 {
   "SHEET_NAME_CELL": "Emails",
-  "TEST_MODE": false,
+  "TEST_MODE": true,
   "DAILY_LIMIT": 25,
   "HOURLY_LIMIT": 5,
   "EMAIL_GAP_MS": 60000,
   "ALLOWED_DAYS": [1, 2, 3, 4],
   "ALLOWED_TIME_START": "09:00",
   "ALLOWED_TIME_END": "13:00",
-  "DEBUG_LOG": True
+  "DEBUG_LOG": true
 }
