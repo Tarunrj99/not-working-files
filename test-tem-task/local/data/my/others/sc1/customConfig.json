@@ -1,6 +1,6 @@
 {
   "SHEET_NAME_CELL": "Emails",
-  "TEST_MODE": false,
+  "TEST_MODE": True,
   "DAILY_LIMIT": 50,
   "HOURLY_LIMIT": 10,
   "EMAIL_GAP_MS": 36000,
